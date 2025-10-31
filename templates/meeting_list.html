@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4 custom-container">
+  <h2 class="text-primary mb-4">
+    <i class="fas fa-calendar-check"></i> All Meetings
+  </h2>
+
+  <!-- ✅ Responsive Filter Row -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <form method="get" class="row g-2 align-items-center">
+        <div class="col-12 col-sm-6 col-md-4">
+          <input
+            type="date"
+            name="selected_date"
+            id="selected_date"
+            class="form-control"
+            value="{{ selected_date }}"
+          />
+        </div>
+        <div class="col-12 col-sm-auto d-flex gap-2 mt-2 mt-sm-0">
+          <button type="submit" class="btn btn-primary flex-fill">
+            <i class="fas fa-filter"></i>
+            <span class="d-none d-sm-inline"> Filter</span>
+          </button>
+          <a href="{% url 'meetings_list' %}" class="btn btn-secondary flex-fill">
+            <i class="fas fa-list"></i>
+            <span class="d-none d-sm-inline"> Show All</span>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ Unified Form for Checkboxes + Download -->
+  <form method="post" action="{% url 'download_meetings_pdf' %}">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between mb-3 flex-wrap">
+      <button type="submit" class="btn btn-info mb-2">
+        <i class="fas fa-download"></i>
+        <span class="d-none d-sm-inline"> Download Selected PDF</span>
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover shadow-lg bg-white rounded">
+        <thead class="table-primary">
+          <tr>
+            <th>Select</th>
+            <th> #</th>
+            <th> Date</th>
+            <th> Subject</th>
+            <th> Venue</th>
+            <th> Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for meeting in meetings %}
+          <tr class="table-row-hover">
+            <td><input type="checkbox" name="selected_meetings" value="{{ meeting.id }}" /></td>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ meeting.date }}</td>
+            <td>{{ meeting.subject }}</td>
+            <td>{{ meeting.place_of_event }}</td>
+            <td>
+              <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'edit_meeting' meeting.id %}" class="btn btn-sm btn-success" title="Edit">
+                  <i class="fas fa-edit"></i>
+                  <span class="d-none d-sm-inline"> Edit</span>
+                </a>
+                <a href="{% url 'delete_meeting' meeting.id %}" class="btn btn-sm btn-danger" title="Delete">
+                  <i class="fas fa-trash"></i>
+                  <span class="d-none d-sm-inline"> Delete</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="fas fa-info-circle fa-2x mb-2"></i><br />
+              No meetings found. Let's schedule some productive ones!
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  <!-- Pagination -->
+  {% if meetings.has_other_pages %}
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if meetings.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ meetings.previous_page_number }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">
+          <i class="fas fa-chevron-left"></i> Previous
+        </a>
+      </li>
+      {% endif %}
+      {% for num in meetings.paginator.page_range %}
+      <li class="page-item {% if meetings.number == num %}active{% endif %}">
+        <a class="page-link" href="?page={{ num }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">{{ num }}</a>
+      </li>
+      {% endfor %}
+      {% if meetings.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ meetings.next_page_number }}{% if selected_date %}&selected_date={{ selected_date }}{% endif %}">
+          Next <i class="fas fa-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- ✅ Custom CSS -->
+<style>
+  /* Remove container padding/margin on small screens */
+  @media (max-width: 576px) {
+    .custom-container {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      width: 100% !important;
+    }
+  }
+</style>
+{% endblock %}
